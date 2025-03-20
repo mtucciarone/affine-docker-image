@@ -32,8 +32,11 @@ jobs:
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push Docker image
+      - name: Build and tag Docker image from Compose
         run: |
           IMAGE_NAME=ghcr.io/${{ github.actor }}/affine
-          docker build -t $IMAGE_NAME:latest .
-          docker push $IMAGE_NAME:latest
+          docker-compose build
+          docker tag affine_affine $IMAGE_NAME:latest
+
+      - name: Push Docker image to GHCR
+        run: docker push ghcr.io/${{ github.actor }}/affine:latest
