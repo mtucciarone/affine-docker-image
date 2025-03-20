@@ -1,0 +1,39 @@
+name: Auto Deploy to GHCR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Create .env file
+        run: |
+          echo "AFFINE_REVISION=stable" >> .env
+          echo "PORT=3010" >> .env
+          echo "DB_DATA_LOCATION=~/.affine/self-host/postgres/pgdata" >> .env
+          echo "UPLOAD_LOCATION=~/.affine/self-host/storage" >> .env
+          echo "CONFIG_LOCATION=~/.affine/self-host/config" >> .env
+          echo "DB_USERNAME=${{ secrets.AFFINE_DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.AFFINE_DB_PASSWORD }}" >> .env
+          echo "DB_DATABASE=affine" >> .env
+        shell: bash
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.actor }}/affine
+          docker build -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:latest
