@@ -35,7 +35,7 @@ jobs:
       - name: Build and tag Docker image from Compose
         run: |
           IMAGE_NAME=ghcr.io/${{ github.actor }}/affine
-          docker-compose build
+          docker compose build
           docker tag affine_affine $IMAGE_NAME:latest
 
       - name: Push Docker image to GHCR
